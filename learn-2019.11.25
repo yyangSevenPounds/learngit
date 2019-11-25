@@ -1,0 +1,29 @@
+---
+##### 1.parallelStream
+>- 与stream 不同的是使用并发处理相应的任务
+>- 有相应的并发安全问题
+>- 虽然是并发处理，但并不是所有情况下都能有相应的性能提升
+
+##### 2.Fork/Join框架
+***(ThreadPoolExecutor是每个线程单独处理一个任务.可能出现的问题是当处理大任务时候出现一个线程处理,而其他线程处于闲置状态.)***
+>- ForkJoinPool线程池中每个线程都维护一个双端队列(Deque),存放的对象是任务(ForkJoinTask)
+>- 任务执行过程中会产生新的任务,例如:`fork()将任务推入当前工作线程的工作队列`.
+>- 每次从队尾取任务执行
+>- 每个线程执行过程中会尝试从另一个线程窃取任务
+>- 遇到`join()`函数时会优先执行其他任务
+>- 没有自己的任务且无法窃取其他任务时进入休眠
+
+##### 3.集合类中的fail-fast
+***(在Java中， 如果在foreach 循环里对某些集合元素进行元素的 remove/add 操作抛出异常ConcurrentModificationException)***
+>- ArrayList.iterator() 返回的是ArrayList内部类`private class Itr implements Iterator<E>{}`
+>- ArrayList.remove/add 将修改ArrayList.modCount变量但是不修改内部类Itr.expectedModCount变量
+>- forEach实际是iterator遍历, 调用内部类 Itr 的 next()方法中执行checkForComodification()将比较ArrayList.modCount 与Itr.expectedModCount,若不相等则throw new ConcurrentModificationException();
+
+###### 3.1 fail-safe集合(例如CopyOnWriteArrayList)
+>- fail-safe集合的所有对集合的修改都是先拷贝一份副本，然后在副本集合上进行的，并不是直接对原集合进行修改.但同样地，迭代器并不能访问到修改后的内容
+>- 当final应用于对象引用时，而不是基本类型时，其含义让人疑惑。对基本类型使用final不能改变的是他的数值。而对于对象引用，不能改变的是他的引用，而对象本身是可以修改的。
+>- CopyOnWriteArrayList 类对于add/remove方法进行ReentrantLock.lock()防止进行复制了多个副本,而get方法不加锁、不复制副本，实现**读写分离**
+
+#### 4.跳表
+>- 链表结构的基础上添加单/多级索引结构:加快检索的过程并方便新增/删除操作
+![跳表结构](./img/7509658-b3caa2bc1e9db136.webp)
